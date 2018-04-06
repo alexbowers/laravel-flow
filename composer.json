@@ -1,0 +1,45 @@
+{
+    "name": "alexbowers/laravel-flow",
+    "description": "",
+    "keywords": [
+        "Laravel",
+        "Flow",
+        "Queue",
+        "Delay"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Bowers",
+            "email": "bowersbros@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laravel\\Flow\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Laravel\\Flow\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Laravel\\Flow\\FlowServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev"
+}
