@@ -16,7 +16,7 @@ class ImmediateFlowTest extends TestCase
     /**
      * @test
      */
-    function a_flow_can_run_immediately()
+    function eloquent_created_immediately()
     {
         Mail::fake();
         Queue::fake();
