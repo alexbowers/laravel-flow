@@ -243,4 +243,53 @@ class ImmediateFlowTest extends TestCase
 
         Mail::assertSent(StubbedEmail::class);
     }
+
+    /**
+     * @test
+     */
+    function eloquent_restored_immediately()
+    {
+        Mail::fake();
+        Queue::fake();
+
+        $flow = new class extends BaseFlow
+        {
+            public function handle($record)
+            {
+                Mail::send(new StubbedEmail);
+            }
+
+            public function watches()
+            {
+                return new EloquentWatcher(Customer::class, 'restored');
+            }
+        };
+
+        $this->registerFlow($flow);
+
+        $customer = Customer::create([
+            'name' => 'Alex Bowers',
+            'email' => 'test@example.com',
+        ]);
+
+        Queue::assertNotPushed(PerformFlow::class);
+
+        $customer->delete();
+
+        Queue::assertNotPushed(PerformFlow::class);
+
+        Customer::withTrashed()->find($customer->id)->restore();
+
+        Queue::assertPushed(PerformFlow::class, function($job) use ($customer) {
+            $record = $job->handle();
+
+            $this->assertEquals($customer->name, $record->name);
+            $this->assertEquals($customer->email, $record->email);
+            $this->assertEquals($customer->id, $record->id);
+
+            return $record;
+        });
+
+        Mail::assertSent(StubbedEmail::class);
+    }
 }
