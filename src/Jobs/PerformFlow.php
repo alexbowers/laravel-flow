@@ -14,17 +14,17 @@ class PerformFlow implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $flow;
-    protected $record;
+    protected $data;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($flow, $record)
+    public function __construct($flow, $data)
     {
         $this->flow = $flow;
-        $this->record = $record;
+        $this->data = $data;
     }
 
     /**
@@ -34,8 +34,8 @@ class PerformFlow implements ShouldQueue
     {
         $flow = new $this->flow;
 
-        $flow->handle($this->record);
+        $flow->handle($this->data);
 
-        return $this->record;
+        return $this->data;
     }
 }

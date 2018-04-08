@@ -4,6 +4,7 @@ namespace Laravel\Flow;
 
 use Illuminate\Support\Facades\Event;
 use Laravel\Flow\Jobs\PerformFlow;
+use Laravel\Flow\Watchers\CustomWatcher;
 use Laravel\Flow\Watchers\EloquentWatcher;
 
 class FlowCore
@@ -15,13 +16,16 @@ class FlowCore
         'saved' => [],
         'deleted' => [],
         'restored' => [],
+        'custom' => [],
     ];
 
     public function register(BaseFlow $flow)
     {
         $watcher = $flow->watches();
 
-        if ($watcher instanceof EloquentWatcher) {
+        if ($watcher instanceof CustomWatcher) {
+            $this->events['custom'][$watcher->getEvent()][] = get_class($flow);
+        } else if ($watcher instanceof EloquentWatcher) {
             $this->events[$watcher->getEvent()][$watcher->getModel()][] = get_class($flow);
         }
 
@@ -31,7 +35,11 @@ class FlowCore
     public function listen()
     {
         foreach ($this->events as $event => $models) {
-            $this->listenForEloquentEvent($event, $models);
+            if ($event == 'custom') {
+                $this->listenForCustomEvent($models);
+            } else {
+                $this->listenForEloquentEvent($event, $models);
+            }
         }
     }
 
@@ -39,6 +47,15 @@ class FlowCore
     {
         foreach ($models as $model => $flows) {
             Event::listen("eloquent.{$event}: {$model}", function ($response) use ($flows) {
+                $this->listenToFlows($flows, $response);
+            });
+        }
+    }
+
+    public function listenForCustomEvent(array $events = [])
+    {
+        foreach ($events as $event => $flows) {
+            Event::listen($event, function ($response = null) use ($flows) {
                 $this->listenToFlows($flows, $response);
             });
         }
