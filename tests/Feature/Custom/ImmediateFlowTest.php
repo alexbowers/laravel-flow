@@ -86,7 +86,45 @@ class ImmediateFlowTest extends TestCase
         Queue::assertPushed(PerformFlow::class, function($job) {
             $data = $job->handle();
 
-            return $data === null;
+            return $data === [];
+        });
+
+        Mail::assertSent(StubbedEmail::class);
+    }
+
+    /**
+     * @test
+     */
+    function string_with_data_custom_event_immediately()
+    {
+        Mail::fake();
+        Queue::fake();
+
+        $flow = new class extends BaseFlow
+        {
+            public function handle($data)
+            {
+                Mail::send(new StubbedEmail);
+            }
+
+            public function watches()
+            {
+                return new CustomWatcher('Special Event');
+            }
+        };
+
+        $this->registerFlow($flow);
+
+        $uniqid = uniqid();
+
+        Event::fire('Special Event', [
+            'unique_id' => $uniqid,
+        ]);
+
+        Queue::assertPushed(PerformFlow::class, function ($job) use ($uniqid) {
+            $response = $job->handle();
+
+            return $response === ['unique_id' => $uniqid];
         });
 
         Mail::assertSent(StubbedEmail::class);

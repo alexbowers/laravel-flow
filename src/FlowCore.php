@@ -55,9 +55,17 @@ class FlowCore
     public function listenForCustomEvent(array $events = [])
     {
         foreach ($events as $event => $flows) {
-            Event::listen($event, function ($response = null) use ($flows) {
-                $this->listenToFlows($flows, $response);
-            });
+            if (class_exists($event)) {
+                Event::listen($event, function ($response) use ($flows) {
+                    $this->listenToFlows($flows, $response);
+                });
+            } else {
+                Event::listen($event . "*", function ($eventName, $response) use ($flows, $event) {
+                    if ($eventName === $event) {
+                        $this->listenToFlows($flows, $response);
+                    }
+                });
+            }
         }
     }
 
