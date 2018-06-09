@@ -3,7 +3,6 @@
 namespace Laravel\Flow\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -23,9 +23,11 @@ class TestCase extends \Orchestra\Testbench\TestCase
         parent::setUp();
 
         $this->loadMigrationsFrom(__DIR__ . '/../Helpers/Migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
         $this->artisan('migrate', ['--database' => 'testing']);
     }
+
     /**
      * Define environment setup.
      *

@@ -2,13 +2,17 @@
 
 namespace Laravel\Flow;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Event;
 use Laravel\Flow\Jobs\PerformFlow;
+use Laravel\Flow\Jobs\ScheduleFlow;
 use Laravel\Flow\Watchers\CustomWatcher;
 use Laravel\Flow\Watchers\EloquentWatcher;
 
 class FlowCore
 {
+    protected $app;
+
     protected $events = [
         'retrieved' => [],
         'created' => [],
@@ -18,6 +22,11 @@ class FlowCore
         'restored' => [],
         'custom' => [],
     ];
+
+    public function __construct(Application $application)
+    {
+        $this->app = $application;
+    }
 
     public function register(BaseFlow $flow)
     {
@@ -72,9 +81,41 @@ class FlowCore
     private function listenToFlows($flows, $response)
     {
         foreach ($flows as $flow) {
+            $instance = $this->app->make($flow);
+
+            $delay = $this->getFlowDelay($instance);
+
             dispatch(
-                new PerformFlow($flow, $response)
+                new ScheduleFlow($flow, $response, $delay)
             );
+
         }
+    }
+
+    private function getFlowDelay($flow)
+    {
+        $delay = null;
+
+        if (method_exists($flow, 'delay')) {
+            $delay = $flow->delay();
+        }
+
+        return $delay;
+    }
+
+    public function schedule()
+    {
+        return Flow::available()
+            ->incomplete()
+            ->notStarted()
+            ->get()->each(function(Flow $flow) {
+                $instance = $this->app->make($flow->flow);
+
+                dd($instance);
+
+                dispatch(
+                    new PerformFlow($flow->flow, $flow->record, $flow->record_id)
+                );
+            });
     }
 }
